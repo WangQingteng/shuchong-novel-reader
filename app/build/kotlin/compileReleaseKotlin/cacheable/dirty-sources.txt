@@ -1,0 +1,13 @@
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/data/BookshelfStorage.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/viewmodel/MainViewModel.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/screens/BookshelfScreen.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/data/BookSearchEngine.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/screens/ReaderScreen.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/MainActivity.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/theme/Color.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/data/DownloadManager.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/screens/SearchScreen.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/theme/Type.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/model/Models.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/theme/Theme.kt
+/data/user/0/com.ai.assistance.operit/files/workspace/ae1123c7-ade1-44e7-a331-8800f08df352/app/src/main/java/com/java/myapplication/ui/screens/BookDetailScreen.kt

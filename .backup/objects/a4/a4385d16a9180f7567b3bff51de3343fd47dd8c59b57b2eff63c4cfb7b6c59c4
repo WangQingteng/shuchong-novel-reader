@@ -1,0 +1,205 @@
+package com.java.myapplication.ui.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.java.myapplication.data.BookSearchEngine
+import com.java.myapplication.data.BookshelfStorage
+import com.java.myapplication.data.DownloadManager
+import com.java.myapplication.model.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+/**
+ * 主ViewModel - 管理搜索、书架、下载状态
+ */
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val searchEngine = BookSearchEngine()
+    val bookshelfStorage = BookshelfStorage(application)
+    val downloadManager = DownloadManager(application)
+
+    // 搜索状态
+    private val _searchState = MutableStateFlow<SearchState>(SearchState.Idle)
+    val searchState: StateFlow<SearchState> = _searchState
+
+    // 当前搜索关键词
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
+    // 当前书源
+    private val _currentSource = MutableStateFlow(BookSource.DEFAULT)
+    val currentSource: StateFlow<BookSource> = _currentSource
+
+    // 书架书籍
+    private val _bookshelfBooks = MutableStateFlow<List<Book>>(emptyList())
+    val bookshelfBooks: StateFlow<List<Book>> = _bookshelfBooks
+
+    // 书籍详情
+    private val _selectedBook = MutableStateFlow<Book?>()
+    val selectedBook: StateFlow<Book?> = _selectedBook
+
+    // 章节列表
+    private val _chapters = MutableStateFlow<List<Chapter>>(emptyList())
+    val chapters: StateFlow<List<Chapter>> = _chapters
+
+    // 章节内容
+    private val _chapterContent = MutableStateFlow("")
+    val chapterContent: StateFlow<String> = _chapterContent
+
+    // 下载任务
+    private val _downloadTasks = MutableStateFlow<List<DownloadTask>>(emptyList())
+    val downloadTasks: StateFlow<List<DownloadTask>> = _downloadTasks
+
+    init {
+        loadBookshelf()
+    }
+
+    /**
+     * 搜索书籍
+     */
+    fun search(query: String) {
+        if (query.isBlank()) return
+        _searchQuery.value = query
+        _searchState.value = SearchState.Loading
+
+        viewModelScope.launch {
+            try {
+                val results = searchEngine.searchBooks(query, _currentSource.value)
+                _searchState.value = if (results.isEmpty()) {
+                    SearchState.Error("未找到相关书籍，请尝试其他关键词")
+                } else {
+                    SearchState.Success(results)
+                }
+            } catch (e: Exception) {
+                _searchState.value = SearchState.Error("搜索失败: ${e.message ?: "网络错误"}")
+            }
+        }
+    }
+
+    /**
+     * 切换书源
+     */
+    fun switchSource(source: BookSource) {
+        _currentSource.value = source
+        val query = _searchQuery.value
+        if (query.isNotBlank()) {
+            search(query)
+        }
+    }
+
+    /**
+     * 清除搜索状态
+     */
+    fun clearSearch() {
+        _searchState.value = SearchState.Idle
+        _searchQuery.value = ""
+    }
+
+    /**
+     * 选择书籍并加载章节
+     */
+    fun selectBook(book: Book) {
+        _selectedBook.value = book
+        viewModelScope.launch {
+            try {
+                val chapters = searchEngine.getBookChapters(book)
+                _chapters.value = chapters
+            } catch (e: Exception) {
+                _chapters.value = emptyList()
+            }
+        }
+    }
+
+    /**
+     * 加载章节内容
+     */
+    fun loadChapterContent(chapter: Chapter) {
+        _chapterContent.value = "加载中..."
+        viewModelScope.launch {
+            try {
+                val content = searchEngine.getChapterContent(chapter)
+                _chapterContent.value = content
+            } catch (e: Exception) {
+                _chapterContent.value = "加载失败: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * 添加书籍到书架
+     */
+    fun addToBookshelf(book: Book) {
+        bookshelfStorage.saveBook(book)
+        loadBookshelf()
+    }
+
+    /**
+     * 从书架移除
+     */
+    fun removeFromBookshelf(bookId: String) {
+        bookshelfStorage.removeBook(bookId)
+        loadBookshelf()
+    }
+
+    /**
+     * 检查是否在书架上
+     */
+    fun isOnBookshelf(bookId: String): Boolean {
+        return bookshelfStorage.isBookOnShelf(bookId)
+    }
+
+    /**
+     * 加载书架数据
+     */
+    fun loadBookshelf() {
+        _bookshelfBooks.value = bookshelfStorage.getAllBooks()
+    }
+
+    /**
+     * 下载章节
+     */
+    fun downloadChapter(
+        bookTitle: String,
+        chapterTitle: String,
+        content: String
+    ) {
+        viewModelScope.launch {
+            try {
+                val path = downloadManager.downloadChapter(bookTitle, chapterTitle, content)
+                _downloadTasks.value = downloadManager.getDownloadTasks()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * 下载并保存整本书
+     */
+    fun downloadBook(book: Book, chapters: List<Chapter>) {
+        viewModelScope.launch {
+            try {
+                val contents = mutableListOf<Pair<String, String>>()
+                for (chapter in chapters) {
+                    val content = searchEngine.getChapterContent(chapter)
+                    contents.add(chapter.title to content)
+                    // 逐章保存
+                    downloadManager.downloadChapter(book.title, chapter.title, content)
+                    _downloadTasks.value = downloadManager.getDownloadTasks()
+                }
+                // 合并为单个文件
+                downloadManager.mergeToSingleFile(book.title, contents)
+                _downloadTasks.value = downloadManager.getDownloadTasks()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        downloadManager.destroy()
+    }
+}
